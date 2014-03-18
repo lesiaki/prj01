@@ -1,8 +1,14 @@
 package com.example.vehicle;
 
+import java.util.ArrayList;
+
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 
 public class DatabaseControl {
 
@@ -18,10 +24,15 @@ public class DatabaseControl {
 	private Context context; // Application's handle
 	private SQLiteDatabase database; // Database connection handle
 	private DatabaseHelper dbHelper; // Database creation/upgrading helper
+	private long temp_id; // Temporary storage of user id
 
 	/*------------------General Database Control Functions-------------------*/
 
-	// Constructor
+	/**
+	 *  Constructor
+	 *  
+	 * 	@param context -> Application's context
+	 */
 	public DatabaseControl(Context context) {
 		// Initialize global variables
 		this.context = context;
@@ -29,7 +40,12 @@ public class DatabaseControl {
 		dbHelper = null;
 	}
 
-	// Obtain database handle
+	/**
+	 * 	Obtain database handle
+	 * 
+	 * 	@return this class's handle
+	 * 	@throws SQLException
+	 */
 	public DatabaseControl open() throws SQLException {
 		dbHelper = new DatabaseHelper(context);
 		database = dbHelper.getWritableDatabase();
@@ -39,5 +55,174 @@ public class DatabaseControl {
 	// Close the database connection
 	public void close() {
 		dbHelper.close();
+	}
+
+	/*-------------------------USERS table Functions-------------------------*/
+
+	/**
+	 *  Select the user from the database with the given id
+	 *  
+	 * 	@param user_id -> user's id
+	 * 	@return found user
+	 */
+	public User getUserById(long user_id) {
+		User user = null;
+
+		try {
+			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
+					KEY_UPASSWORD };
+
+			Cursor cursor = database.query(true, TABLE_USERS, columns, KEY_UID
+					+ "=" + user_id, null, null, null, null, null);
+
+			if (cursor != null) {
+				cursor.moveToFirst();
+				String username = cursor.getString(cursor
+						.getColumnIndex(KEY_UUSER_NAME));
+				String password = cursor.getString(cursor
+						.getColumnIndex(KEY_UPASSWORD));
+
+				user = new User(user_id, username, password);
+			}
+		} catch (SQLiteException e) {
+			user = null;
+		} catch (CursorIndexOutOfBoundsException e) {
+			user = null;
+		}
+		return user;
+	}
+
+	/**
+	 *  Select the user from the database with the given username
+	 *  
+	 * 	@param username -> user's name
+	 * 	@return found user
+	 */
+	public User getUserByUsername(String username) {
+		User user = null;
+
+		try {
+			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
+					KEY_UPASSWORD };
+
+			// TODO Avoid sql-injection...use prepared statements
+			Cursor cursor = database.query(true, TABLE_USERS, columns,
+					KEY_UUSER_NAME + "=" + username, null, null, null, null,
+					null);
+
+			if (cursor != null) {
+				cursor.moveToFirst();
+				long id = cursor.getLong(cursor.getColumnIndex(KEY_UID));
+				String password = cursor.getString(cursor
+						.getColumnIndex(KEY_UPASSWORD));
+
+				user = new User(id, username, password);
+			}
+		} catch (SQLiteException e) {
+			user = null;
+		} catch (CursorIndexOutOfBoundsException e) {
+			user = null;
+		}
+		return user;
+	}
+
+	/**
+	 *  Select all users from the database
+	 *  
+	 * 	@return list of all users in the database
+	 */
+	public ArrayList<User> getAllUsers() {
+		ArrayList<User> userList = new ArrayList<User>();
+
+		try {
+			Cursor cursor;
+			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
+					KEY_UPASSWORD };
+
+			cursor = database.query(true, TABLE_USERS, columns, null, null,
+					null, null, KEY_UID + " ASC", null);
+
+			if (cursor != null) {
+				long id;
+				String username;
+				String password;
+
+				// Appending all the users into the userList
+				for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor
+						.moveToNext()) {
+					id = cursor.getInt(cursor.getColumnIndex(KEY_UID));
+					username = cursor.getString(cursor
+							.getColumnIndex(KEY_UUSER_NAME));
+					password = cursor.getString(cursor
+							.getColumnIndex(KEY_UPASSWORD));
+
+					userList.add(new User(id, username, password));
+				}
+			}
+		} catch (SQLiteException e) {
+			userList = null;
+		} catch (CursorIndexOutOfBoundsException e) {
+			userList = null;
+		}
+		return userList;
+	}
+
+	/**
+	 * 	Add a new user into the table
+	 * 
+	 * 	@param username -> User's name
+	 * 	@param password -> User's password
+	 * 	@return user's id
+	 */
+	public long addUser(String username, String password) {
+		return addUser(username, password, false);
+	}
+
+	public long addUser(String username, String password,
+			boolean updateIfExisting) {
+		ContentValues values = new ContentValues();
+
+		values.put(KEY_UUSER_NAME, username);
+		values.put(KEY_UPASSWORD, password);
+
+		if (isUserInUsersTable(username)) {
+			// Update the password
+			if (updateIfExisting) {
+				database.update(TABLE_USERS, values, KEY_UID + "=" + temp_id,
+						null);
+			}
+			return temp_id;
+		} else {
+			// Inserting a new user into the USERS table
+			return database.insert(TABLE_USERS, null, values);
+		}
+	}
+
+	/**
+	 *  Checks if a user with the given user name exists in the USERS table
+	 *  
+	 * 	@param username -> user's name
+	 * 	@return true if the user found and false otherwise
+	 */
+	public boolean isUserInUsersTable(String username) {
+		boolean status = false;
+		try {
+			Cursor cursor = database.query(true, TABLE_USERS,
+					new String[] { KEY_UID }, KEY_UUSER_NAME + "='" + username
+							+ "'", null, null, null, null, null);
+
+			if (cursor != null) {
+				cursor.moveToFirst();
+				temp_id = cursor.getInt(cursor.getColumnIndex(KEY_UID));
+				status = true;
+			}
+		} catch (SQLiteException e) {
+			status = false;
+			temp_id = -1;
+		} catch (CursorIndexOutOfBoundsException e) {
+			status = false;
+			temp_id = -1;
+		}
+		return status;
 	}
 }
