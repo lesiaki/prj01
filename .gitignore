@@ -1,0 +1,6 @@
+#Compiled Files
+bin/
+
+#IDE Files
+.project
+.classpath
