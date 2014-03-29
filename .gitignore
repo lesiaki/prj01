@@ -1,6 +1,9 @@
 #Compiled Files
 bin/
 
+#Generated files
+gen/
+
 #IDE Files
 .project
 .classpath
