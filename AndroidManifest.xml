@@ -28,6 +28,12 @@
             android:name=".RegisterActivity"
             android:label="Register New Account" >
         </activity>
+        
+         <!-- Entry for RegisterActivity.class -->
+        <activity
+            android:name=".Home"
+            android:label="Home" >
+        </activity>
     </application>
 
 </manifest>

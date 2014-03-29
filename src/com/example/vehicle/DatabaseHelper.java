@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper{
 	// Constants for the database details
-	private static final int 	DB_VERSION = 1;
+	private static final int 	DB_VERSION = 2;
 	private static final String DB_NAME = "app.db";
 	private static final String TABLE_USERS = "users";
 
@@ -16,8 +16,9 @@ public class DatabaseHelper extends SQLiteOpenHelper{
 			+ TABLE_USERS 
 			+ "(" 
 			+ "user_id INTEGER PRIMARY KEY AUTOINCREMENT ,"
+			+ "email	VARCHAR(45) NOT NULL ," 
 			+ "username VARCHAR(45) NOT NULL ," 
-			+ "password VARCHAR(45) NOT NULL ,"
+			+ "password VARCHAR(45) NOT NULL"
 			+ ")";
 
 	// A general SQL command for deleting a table

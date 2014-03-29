@@ -1,20 +1,31 @@
 package com.example.vehicle;
 
 public class User {
-	private long   id;
+	private long id;
 	private String username;
+	private String email;
 	private String password;
 
 	public User() {
-		this.id  = -1;
+		this.id = -1;
 		this.username = "";
+		this.email = "";
 		this.password = "";
 	}
-	
-	public User(long id, String username, String password) {
-		this.id 	  = id;
+
+	public User(long id, String username, String email, String password) {
+		this.id = id;
 		this.username = username;
+		this.email = email;
 		this.password = password;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public long getId() {
@@ -39,5 +50,11 @@ public class User {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	@Override
+	public String toString() {
+		return "{id:" + getId() + ", un:" + getUsername() + ", em:" + getEmail() + ", pw:"
+				+ getPassword() + "}";
 	}
 }

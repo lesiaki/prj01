@@ -18,6 +18,7 @@ public class DatabaseControl {
 	// Column names for the USERS table
 	private static final String KEY_UID = "user_id";
 	private static final String KEY_UUSER_NAME = "username";
+	private static final String KEY_UEMAIL = "email";
 	private static final String KEY_UPASSWORD = "password";
 
 	// Database handles
@@ -29,9 +30,10 @@ public class DatabaseControl {
 	/*------------------General Database Control Functions-------------------*/
 
 	/**
-	 *  Constructor
-	 *  
-	 * 	@param context -> Application's context
+	 * Constructor
+	 * 
+	 * @param context
+	 *            -> Application's context
 	 */
 	public DatabaseControl(Context context) {
 		// Initialize global variables
@@ -41,10 +43,10 @@ public class DatabaseControl {
 	}
 
 	/**
-	 * 	Obtain database handle
+	 * Obtain database handle
 	 * 
-	 * 	@return this class's handle
-	 * 	@throws SQLException
+	 * @return this class's handle
+	 * @throws SQLException
 	 */
 	public DatabaseControl open() throws SQLException {
 		dbHelper = new DatabaseHelper(context);
@@ -60,17 +62,18 @@ public class DatabaseControl {
 	/*-------------------------USERS table Functions-------------------------*/
 
 	/**
-	 *  Select the user from the database with the given id
-	 *  
-	 * 	@param user_id -> user's id
-	 * 	@return found user
+	 * Select the user from the database with the given id
+	 * 
+	 * @param user_id
+	 *            -> user's id
+	 * @return found user
 	 */
 	public User getUserById(long user_id) {
 		User user = null;
 
 		try {
 			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
-					KEY_UPASSWORD };
+					KEY_UEMAIL, KEY_UPASSWORD };
 
 			Cursor cursor = database.query(true, TABLE_USERS, columns, KEY_UID
 					+ "=" + user_id, null, null, null, null, null);
@@ -79,10 +82,12 @@ public class DatabaseControl {
 				cursor.moveToFirst();
 				String username = cursor.getString(cursor
 						.getColumnIndex(KEY_UUSER_NAME));
+				String email = cursor.getString(cursor
+						.getColumnIndex(KEY_UEMAIL));
 				String password = cursor.getString(cursor
 						.getColumnIndex(KEY_UPASSWORD));
 
-				user = new User(user_id, username, password);
+				user = new User(user_id, username, email, password);
 			}
 		} catch (SQLiteException e) {
 			user = null;
@@ -93,30 +98,33 @@ public class DatabaseControl {
 	}
 
 	/**
-	 *  Select the user from the database with the given username
-	 *  
-	 * 	@param username -> user's name
-	 * 	@return found user
+	 * Select the user from the database with the given username
+	 * 
+	 * @param username
+	 *            -> user's name
+	 * @return found user
 	 */
 	public User getUserByUsername(String username) {
 		User user = null;
 
 		try {
 			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
-					KEY_UPASSWORD };
+					KEY_UEMAIL, KEY_UPASSWORD };
 
 			// TODO Avoid sql-injection...use prepared statements
 			Cursor cursor = database.query(true, TABLE_USERS, columns,
-					KEY_UUSER_NAME + "=" + username, null, null, null, null,
-					null);
+					KEY_UUSER_NAME + "='" + username + "'", null, null, null,
+					null, null);
 
 			if (cursor != null) {
 				cursor.moveToFirst();
 				long id = cursor.getLong(cursor.getColumnIndex(KEY_UID));
+				String email = cursor.getString(cursor
+						.getColumnIndex(KEY_UEMAIL));
 				String password = cursor.getString(cursor
 						.getColumnIndex(KEY_UPASSWORD));
 
-				user = new User(id, username, password);
+				user = new User(id, username, email, password);
 			}
 		} catch (SQLiteException e) {
 			user = null;
@@ -127,9 +135,46 @@ public class DatabaseControl {
 	}
 
 	/**
-	 *  Select all users from the database
-	 *  
-	 * 	@return list of all users in the database
+	 * Select the user from the database with the given email
+	 * 
+	 * @param email
+	 *            -> user's email
+	 * @return found user
+	 */
+	public User getUserByEmail(String email) {
+		User user = null;
+
+		try {
+			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
+					KEY_UEMAIL, KEY_UPASSWORD };
+
+			// TODO Avoid sql-injection...use prepared statements
+			Cursor cursor = database.query(true, TABLE_USERS, columns,
+					KEY_UEMAIL + "='" + email + "'", null, null, null, null,
+					null);
+
+			if (cursor != null) {
+				cursor.moveToFirst();
+				long id = cursor.getLong(cursor.getColumnIndex(KEY_UID));
+				String username = cursor.getString(cursor
+						.getColumnIndex(KEY_UUSER_NAME));
+				String password = cursor.getString(cursor
+						.getColumnIndex(KEY_UPASSWORD));
+
+				user = new User(id, username, email, password);
+			}
+		} catch (SQLiteException e) {
+			user = null;
+		} catch (CursorIndexOutOfBoundsException e) {
+			user = null;
+		}
+		return user;
+	}
+
+	/**
+	 * Select all users from the database
+	 * 
+	 * @return list of all users in the database
 	 */
 	public ArrayList<User> getAllUsers() {
 		ArrayList<User> userList = new ArrayList<User>();
@@ -137,7 +182,7 @@ public class DatabaseControl {
 		try {
 			Cursor cursor;
 			String[] columns = new String[] { KEY_UID, KEY_UUSER_NAME,
-					KEY_UPASSWORD };
+					KEY_UEMAIL, KEY_UPASSWORD };
 
 			cursor = database.query(true, TABLE_USERS, columns, null, null,
 					null, null, KEY_UID + " ASC", null);
@@ -145,6 +190,7 @@ public class DatabaseControl {
 			if (cursor != null) {
 				long id;
 				String username;
+				String email;
 				String password;
 
 				// Appending all the users into the userList
@@ -153,10 +199,11 @@ public class DatabaseControl {
 					id = cursor.getInt(cursor.getColumnIndex(KEY_UID));
 					username = cursor.getString(cursor
 							.getColumnIndex(KEY_UUSER_NAME));
+					email = cursor.getString(cursor.getColumnIndex(KEY_UEMAIL));
 					password = cursor.getString(cursor
 							.getColumnIndex(KEY_UPASSWORD));
 
-					userList.add(new User(id, username, password));
+					userList.add(new User(id, username, email, password));
 				}
 			}
 		} catch (SQLiteException e) {
@@ -168,24 +215,29 @@ public class DatabaseControl {
 	}
 
 	/**
-	 * 	Add a new user into the table
+	 * Add a new user into the table
 	 * 
-	 * 	@param username -> User's name
-	 * 	@param password -> User's password
-	 * 	@return user's id
+	 * @param username
+	 *            -> User's name
+	 * @param email
+	 *            -> User's email
+	 * @param password
+	 *            -> User's password
+	 * @return user's id
 	 */
-	public long addUser(String username, String password) {
-		return addUser(username, password, false);
+	public long addUser(String username, String email, String password) {
+		return addUser(username, email, password, false);
 	}
 
-	public long addUser(String username, String password,
+	public long addUser(String username, String email, String password,
 			boolean updateIfExisting) {
 		ContentValues values = new ContentValues();
 
 		values.put(KEY_UUSER_NAME, username);
+		values.put(KEY_UEMAIL, email);
 		values.put(KEY_UPASSWORD, password);
 
-		if (isUserInUsersTable(username)) {
+		if (isUserInUsersTable(email)) {
 			// Update the password
 			if (updateIfExisting) {
 				database.update(TABLE_USERS, values, KEY_UID + "=" + temp_id,
@@ -199,19 +251,52 @@ public class DatabaseControl {
 	}
 
 	/**
-	 *  Checks if a user with the given user name exists in the USERS table
-	 *  
-	 * 	@param username -> user's name
-	 * 	@return true if the user found and false otherwise
+	 * Checks if a user with the given email exists in the USERS table
+	 * 
+	 * @param email
+	 *            -> user's email
+	 * @return true if the user found and false otherwise
 	 */
-	public boolean isUserInUsersTable(String username) {
+	public boolean isUserInUsersTable(String email) {
 		boolean status = false;
 		try {
 			Cursor cursor = database.query(true, TABLE_USERS,
-					new String[] { KEY_UID }, KEY_UUSER_NAME + "='" + username
-							+ "'", null, null, null, null, null);
+					new String[] { KEY_UID }, KEY_UEMAIL + "='" + email + "'",
+					null, null, null, null, null);
 
 			if (cursor != null) {
+				cursor.moveToFirst();
+				temp_id = cursor.getInt(cursor.getColumnIndex(KEY_UID));
+				status = true;
+			}
+		} catch (SQLiteException e) {
+			status = false;
+			temp_id = -1;
+		} catch (CursorIndexOutOfBoundsException e) {
+			status = false;
+			temp_id = -1;
+		}
+		return status;
+	}
+
+	/**
+	 * Checks if a user with the given email and password is valid
+	 * 
+	 * @param email
+	 *            -> user's email
+	 * @param password
+	 *            -> sser's password
+	 * @return true if the user found and false otherwise
+	 */
+	public boolean isValidEmailPassword(String email, String password) {
+		boolean status = false;
+		try {
+			Cursor cursor = database.query(true, TABLE_USERS,
+					new String[] { KEY_UID }, KEY_UEMAIL + "='" + email
+							+ "' AND " + KEY_UPASSWORD + "='" + password + "'",
+					null, null, null, null, null);
+
+			if (cursor != null && cursor.getCount() > 0) {
 				cursor.moveToFirst();
 				temp_id = cursor.getInt(cursor.getColumnIndex(KEY_UID));
 				status = true;

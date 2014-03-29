@@ -25,6 +25,7 @@
   		<!--  Header Ends --> 
   		<!-- Footer Start -->
   		<LinearLayout android:id="@+id/footer"
+  		    	android:orientation="vertical"
   				android:layout_width="fill_parent"
   				android:layout_height="90dip"
   				android:background="@layout/footer_repeat"
@@ -34,7 +35,6 @@
   		
   		<!-- Registration Form -->
 		<LinearLayout
-		  xmlns:android="http://schemas.android.com/apk/res/android"
 		  android:orientation="vertical"
 		  android:layout_width="match_parent"
 		  android:layout_height="wrap_content"
@@ -46,6 +46,7 @@
 		  		android:textColor="#372c24"
 		  		android:text="Full Name"/>
 		  <EditText android:id="@+id/reg_fullname" 
+		      android:inputType="textPersonName"
 		  		android:layout_width="fill_parent"
 		  		android:layout_height="wrap_content"
 		  		android:layout_marginTop="5dip"
@@ -57,6 +58,7 @@
 		  		android:textColor="#372c24"
 		  		android:text="Email"/>
 		  <EditText android:id="@+id/reg_email" 
+		      android:inputType="textEmailAddress"
 		  		android:layout_width="fill_parent"
 		  		android:layout_height="wrap_content"
 		  		android:layout_marginTop="5dip"
@@ -68,9 +70,9 @@
 		  		android:textColor="#372c24"
 		  		android:text="Password"/>
 		  <EditText android:id="@+id/reg_password" 
+		      android:inputType="textPassword"
 		        android:layout_width="fill_parent"
 		  		android:layout_height="wrap_content"
-		  		android:password="true"
 		  		android:singleLine="true"
 		  		android:layout_marginTop="5dip"/>
 		  <!-- Register Button -->		
